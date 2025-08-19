@@ -1,3 +1,98 @@
+### Quick start (Docker, recommended)
+- **Prerequisites**: Install Docker Desktop.
+- **Clone the repo**:
+```bash
+git clone https://github.com/your-org/university-verifier.git
+cd university-verifier
+```
+- **Create `.env` in the project root**:
+```env
+POSTGRES_PASSWORD=app
+```
+- **Start everything**:
+```bash
+docker compose up -d --build
+```
+- **Open the app**:
+  - Frontend: http://localhost:5173
+  - Backend health: http://localhost:5000/health (should return {"status":"ok"})
+
+- **Stop**:
+```bash
+docker compose down
+```
+- **Reset DB (wipe data) if passwords change or you want a clean start**:
+```bash
+docker compose down -v
+```
+
+### Common Docker commands
+- **See service status**:
+```bash
+docker compose ps
+```
+- **Follow logs**:
+```bash
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+```
+
+### Optional: run locally without Docker
+Only if you prefer a local setup. Otherwise, skip this.
+
+- **Prerequisites**
+  - Python 3.11
+  - Node.js 20
+  - Tesseract OCR
+    - Windows: install Tesseract (UB Mannheim build is fine), add to PATH
+    - macOS: `brew install tesseract`
+    - Ubuntu/Debian: `sudo apt-get install -y tesseract-ocr libgl1`
+
+- **Start Postgres (easiest with Docker)**:
+```bash
+docker run --name uv-db -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app -e POSTGRES_DB=university -p 5432:5432 -d postgres:16
+```
+
+- **Backend**
+```bash
+cd backend
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+# Env vars
+$env:DB_URL="postgresql+psycopg2://app:app@localhost:5432/university"   # PowerShell
+export DB_URL="postgresql+psycopg2://app:app@localhost:5432/university"  # macOS/Linux
+$env:CORS_ORIGIN="http://localhost:5173"
+$env:UPLOAD_DIR="$(Resolve-Path ..)/uploads"  # or any absolute path
+python -m app.main
+# Backend runs at http://localhost:5000
+```
+
+- **Frontend**
+```bash
+cd frontend
+npm ci
+# Make sure API points to backend:
+# Vite uses VITE_API_URL at build/runtime; docker sets it automatically.
+# For local dev, create .env.local with:
+#   VITE_API_URL=http://localhost:5000/api/v1
+npm run dev
+# Open http://localhost:5173
+```
+
+### Troubleshooting
+- **Backend can’t connect to DB (password auth failed)**: Ensure `.env` `POSTGRES_PASSWORD` matches; if you changed it, run `docker compose down -v` then `docker compose up -d --build`.
+- **Port already in use (5000 or 5173)**: Stop conflicting apps or edit `docker-compose.yml` port mappings.
+- **Tesseract not found (non-Docker run)**: Install Tesseract and ensure it’s on PATH.
+- **CORS issues (non-Docker run)**: Set `CORS_ORIGIN` to your frontend origin (e.g., `http://localhost:5173`).
+
+- The easiest path for your friend is Docker: create `.env` with `POSTGRES_PASSWORD=app`, run `docker compose up -d --build`, then visit http://localhost:5173.
+
+
+
+
 University Verifier
 
 A Docker-first React + Flask + PostgreSQL application with OCR and optional AI extraction.
