@@ -1,6 +1,13 @@
 University Verifier
 
 A Docker-first React + Flask + PostgreSQL application with OCR and optional AI extraction.
+run this-
+docker compose up -d
+docker compose ps --all
+You can now access:
+•  Frontend: http://localhost:5173
+•  Backend: http://localhost:5000/health
+•  API base: http://localhost:5000/api/v1
 
 Quick start
 •  Copy .env.example to .env and set POSTGRES_PASSWORD (no quotes).
