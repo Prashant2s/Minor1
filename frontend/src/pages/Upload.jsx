@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import api from '../api/axios'
+import api from '../api/axios.js'
 
 export default function Upload() {
-  const [file, setFile] = useState<File | null>(null)
-  const [result, setResult] = useState<any>(null)
+  const [file, setFile] = useState(null)
+  const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     if (!file) return
     setLoading(true)
@@ -19,7 +19,7 @@ export default function Upload() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setResult(res.data)
-    } catch (err: any) {
+    } catch (err) {
       setError(err?.response?.data?.error || 'Upload failed')
     } finally {
       setLoading(false)
@@ -42,4 +42,3 @@ export default function Upload() {
     </div>
   )
 }
-
