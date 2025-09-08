@@ -1,12 +1,15 @@
 from typing import List
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Settings:
     def __init__(self) -> None:
-        self.DB_URL: str = os.getenv("DB_URL", "postgresql+psycopg2://app:app@db:5432/university")
-        self.OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
+        self.DEEPSEEK_API_KEY: str | None = os.getenv("DEEPSEEK_API_KEY")
         self.OCR_ENGINE: str = os.getenv("OCR_ENGINE", "tesseract")  # easyocr|tesseract
         self.CORS_ORIGINS: List[str] = [os.getenv("CORS_ORIGIN", "*")]
-        self.UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "/data/uploads")
+        self.UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
 
 settings = Settings()

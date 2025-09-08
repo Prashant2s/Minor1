@@ -1,26 +1,36 @@
 from ..core.config import settings
+import openai
+import logging
 
-# Minimal field extraction placeholder.
-# In production, call OpenAI (if key present) or run simple heuristic parsing.
+logger = logging.getLogger(__name__)
 
-def extract_fields(ocr_text: str) -> dict:
-    # If OpenAI key is provided, we could integrate here later.
-    # For now, return a simple demo mapping based on naive heuristics.
+def generate_certificate_summary(ocr_text: str, extracted_fields: dict) -> str:
+    """Generate a summary of the document using DeepSeek AI if available."""
+    if settings.DEEPSEEK_API_KEY:
+        try:
+            client = openai.OpenAI(
+                api_key=settings.DEEPSEEK_API_KEY,
+                base_url="https://api.deepseek.com"
+            )
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "Summarize this document text in 2-3 sentences. Focus on the key information like student name, degree, institution, and any important details."},
+                    {"role": "user", "content": ocr_text}
+                ],
+                max_tokens=200
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"DeepSeek summary failed: {e}")
+            return generate_simple_summary(ocr_text)
+    else:
+        return generate_simple_summary(ocr_text)
+
+def generate_simple_summary(ocr_text: str) -> str:
+    """Generate a simple summary without AI."""
     lines = [l.strip() for l in ocr_text.splitlines() if l.strip()]
-    out = {}
-    for line in lines:
-        lower = line.lower()
-        if 'name' in lower and ':' in line:
-            out['student_name'] = line.split(':', 1)[1].strip()
-        if 'registration' in lower and ':' in line:
-            out['registration_no'] = line.split(':', 1)[1].strip()
-        if 'degree' in lower and ':' in line:
-            out['degree'] = line.split(':', 1)[1].strip()
-        if 'date of birth' in lower and ':' in line:
-            out['date_of_birth'] = line.split(':', 1)[1].strip()
-        if 'year' in lower and ':' in line:
-            out['year'] = line.split(':', 1)[1].strip()
-        if 'class' in lower and ':' in line:
-            out['classification'] = line.split(':', 1)[1].strip()
-    return out or {"raw": ocr_text[:500]}
+    if len(lines) > 0:
+        return f"Document contains {len(lines)} lines of text. First line: {lines[0][:100]}..."
+    return "No text content found in document."
 
