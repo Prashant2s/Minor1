@@ -1,274 +1,431 @@
-cd frontend
-npm run dev
+# Document Summarizer
 
-cd backend
-pip install -r requirements.txt
-python -m app.main
+A modern web application that uses OCR (Optical Character Recognition) and AI to extract and summarize text from uploaded documents. Built with React frontend and Flask backend, featuring Tesseract OCR and optional DeepSeek AI integration.
 
-### Quick start (Docker, recommended)
+## 🚀 Features
 
-- **Prerequisites**: Install Docker Desktop.
-- **Clone the repo**:
+- **Document Upload**: Support for PDF, JPG, PNG, TIFF image formats
+- **OCR Text Extraction**: Uses Tesseract OCR to extract text from images
+- **AI-Powered Summarization**: Optional DeepSeek AI integration for intelligent document summarization
+- **Modern UI**: Clean, responsive React interface with Material-UI components
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **File Processing**: Automatic image validation and processing
 
-```bash
-git clone https://github.com/your-org/university-verifier.git
-cd university-verifier
+## 🏗️ Tech Stack
+
+### Frontend
+
+- **React 19.1.1** - Modern React with latest features
+- **Vite 7.1.2** - Fast build tool and development server
+- **Material-UI 7.3.1** - Modern UI components
+- **Axios 1.11.0** - HTTP client for API communication
+- **React Router DOM 7.8.0** - Client-side routing
+
+### Backend
+
+- **Flask 3.0.3** - Lightweight Python web framework
+- **Pillow 10.4.0** - Python Imaging Library for image processing
+- **Pytesseract 0.3.13** - Python wrapper for Tesseract OCR
+- **OpenAI 1.40.0** - DeepSeek AI integration
+- **Flask-CORS 4.0.1** - Cross-Origin Resource Sharing support
+
+## 📁 Project Structure
+
+```
+Minor1/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── routes.py          # API endpoints
+│   │   ├── core/
+│   │   │   └── config.py          # Configuration settings
+│   │   ├── services/
+│   │   │   ├── extract.py         # AI summarization logic
+│   │   │   ├── images.py          # Image processing utilities
+│   │   │   └── ocr.py             # OCR text extraction
+│   │   └── main.py                # Flask application entry point
+│   ├── requirements.txt           # Python dependencies
+│   ├── env.example               # Environment variables template
+│   └── uploads/                  # Uploaded files directory
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── axios.js          # API configuration
+│   │   ├── pages/
+│   │   │   └── Upload.jsx         # Upload page component
+│   │   ├── App.jsx               # Main application component
+│   │   ├── App.css               # Application styles
+│   │   ├── index.css             # Global styles
+│   │   └── main.jsx              # Application entry point
+│   ├── package.json              # Node.js dependencies
+│   ├── vite.config.js            # Vite configuration
+│   └── eslint.config.js          # ESLint configuration
+├── .gitignore                    # Git ignore rules
+└── README.md                     # This file
 ```
 
-- **Create `.env` in the project root**:
+## 🛠️ Installation & Setup
+
+### Prerequisites
+
+- **Python 3.11+** (for backend)
+- **Node.js 20+** (for frontend)
+- **Tesseract OCR** (for text extraction)
+  - **Windows**: Install from [UB Mannheim](https://github.com/UB-Mannheim/tesseract/wiki) or use `winget install UB-Mannheim.TesseractOCR`
+  - **macOS**: `brew install tesseract`
+  - **Ubuntu/Debian**: `sudo apt-get install -y tesseract-ocr libgl1`
+
+### Quick Start (Local Development)
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd Minor1
+   ```
+
+2. **Setup Backend**
+
+   ```bash
+   cd backend
+   python -m venv .venv
+
+   # Windows PowerShell
+   .\.venv\Scripts\Activate.ps1
+
+   # macOS/Linux
+   source .venv/bin/activate
+
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Environment Variables**
+
+   ```bash
+   # Copy the example environment file
+   cp env.example .env
+
+   # Edit .env and add your DeepSeek API key (optional)
+   DEEPSEEK_API_KEY=your_deepseek_api_key_here
+   UPLOAD_DIR=./uploads
+   OCR_ENGINE=tesseract
+   CORS_ORIGIN=*
+   ```
+
+4. **Start Backend Server**
+
+   ```bash
+   python -m app.main
+   # Server runs at http://localhost:5000
+   ```
+
+5. **Setup Frontend** (in a new terminal)
+
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   # Frontend runs at http://localhost:5173
+   ```
+
+6. **Access the Application**
+   - Frontend: http://localhost:5173
+   - Backend Health Check: http://localhost:5000/health
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the backend directory:
 
 ```env
-POSTGRES_PASSWORD=app
+# DeepSeek API Configuration (optional)
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+
+# File Upload Settings
+UPLOAD_DIR=./uploads
+
+# OCR Engine Selection
+OCR_ENGINE=tesseract
+
+# CORS Settings
+CORS_ORIGIN=*
 ```
 
-- **Start everything**:
+### DeepSeek AI Integration (Optional)
+
+To enable AI-powered document summarization:
+
+1. Get a DeepSeek API key from [DeepSeek](https://platform.deepseek.com/)
+2. Add it to your `.env` file:
+   ```env
+   DEEPSEEK_API_KEY=your_actual_api_key_here
+   ```
+3. Restart the backend server
+
+Without the API key, the application will use simple text-based summarization.
+
+## 📡 API Endpoints
+
+### Base URL: `http://localhost:5000/api/v1`
+
+| Method | Endpoint     | Description                     | Request Body                            |
+| ------ | ------------ | ------------------------------- | --------------------------------------- |
+| `POST` | `/summarize` | Upload and summarize a document | `multipart/form-data` with `file` field |
+| `GET`  | `/health`    | Health check endpoint           | None                                    |
+
+### Example API Usage
+
+**Upload Document (PowerShell)**
+
+```powershell
+$form = @{ file = Get-Item 'C:\path\to\document.jpg' }
+Invoke-WebRequest -UseBasicParsing -Method Post -Uri http://localhost:5000/api/v1/summarize -Form $form
+```
+
+**Upload Document (curl)**
 
 ```bash
-docker compose up -d --build
+curl -X POST -F "file=@document.jpg" http://localhost:5000/api/v1/summarize
 ```
 
-- **Open the app**:
+### Response Format
 
-  - Frontend: http://localhost:5173
-  - Backend health: http://localhost:5000/health (should return {"status":"ok"})
-
-- **Stop**:
-
-```bash
-docker compose down
+```json
+{
+  "file_type": "image",
+  "summary": "Document contains information about...",
+  "extracted_text_length": 1234,
+  "processed_at": "2024-01-01T12:00:00.000Z"
+}
 ```
 
-- **Reset DB (wipe data) if passwords change or you want a clean start**:
+## 🎯 Usage
 
-```bash
-docker compose down -v
+1. **Open the Application**: Navigate to http://localhost:5173
+2. **Upload Document**: Click "Choose File" and select a supported document (PDF, JPG, PNG, TIFF)
+3. **Process**: Click "Summarize Document" to extract text and generate summary
+4. **View Results**: The application will display:
+   - AI-generated summary (if DeepSeek API is configured)
+   - File type information
+   - Extracted text length
+   - Processing timestamp
+
+## 🔍 Supported File Types
+
+- **Images**: JPG, JPEG, PNG, TIFF, TIF
+- **Documents**: PDF (basic support)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**1. Tesseract Not Found**
+
+```
+Error: Tesseract OCR is not installed
 ```
 
-### Common Docker commands
+- **Solution**: Install Tesseract OCR and ensure it's in your system PATH
+- **Windows**: Download from UB Mannheim or use `winget install UB-Mannheim.TesseractOCR`
+- **macOS**: `brew install tesseract`
+- **Linux**: `sudo apt-get install tesseract-ocr`
 
-- **See service status**:
+**2. CORS Issues**
 
-```bash
-docker compose ps
+```
+Access to fetch at 'http://localhost:5000' from origin 'http://localhost:5173' has been blocked by CORS policy
 ```
 
-- **Follow logs**:
+- **Solution**: Ensure `CORS_ORIGIN` is set to `*` or your frontend URL in `.env`
 
-```bash
-docker compose logs -f backend
-docker compose logs -f frontend
-docker compose logs -f db
+**3. File Upload Errors**
+
+```
+Error: Invalid file type
 ```
 
-### Optional: run locally without Docker
+- **Solution**: Ensure you're uploading supported file types (PDF, JPG, PNG, TIFF)
 
-Only if you prefer a local setup. Otherwise, skip this.
+**4. DeepSeek API Errors**
 
-- **Prerequisites**
-
-  - Python 3.11
-  - Node.js 20
-  - Tesseract OCR
-    - Windows: install Tesseract (UB Mannheim build is fine), add to PATH
-    - macOS: `brew install tesseract`
-    - Ubuntu/Debian: `sudo apt-get install -y tesseract-ocr libgl1`
-
-- **Start Postgres (easiest with Docker)**:
-
-```bash
-docker run --name uv-db -e POSTGRES_USER=app -e POSTGRES_PASSWORD=app -e POSTGRES_DB=university -p 5432:5432 -d postgres:16
+```
+Error: DeepSeek summary failed
 ```
 
-- **Backend**
+- **Solution**: Check your API key in `.env` or remove it to use simple summarization
+
+### Debug Mode
+
+To enable debug logging, modify `backend/app/main.py`:
+
+```python
+app.run(host="0.0.0.0", port=5000, debug=True)
+```
+
+## 🚀 Development
+
+### Backend Development
 
 ```bash
 cd backend
-python -m venv .venv
-# Windows PowerShell: .\.venv\Scripts\Activate.ps1
-# macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-# Env vars
-$env:DB_URL="postgresql+psycopg2://app:app@localhost:5432/university"   # PowerShell
-export DB_URL="postgresql+psycopg2://app:app@localhost:5432/university"  # macOS/Linux
-$env:CORS_ORIGIN="http://localhost:5173"
-$env:UPLOAD_DIR="$(Resolve-Path ..)/uploads"  # or any absolute path
 python -m app.main
-# Backend runs at http://localhost:5000
 ```
 
-- **Frontend**
+### Frontend Development
 
 ```bash
 cd frontend
-npm ci
-# Make sure API points to backend:
-# Vite uses VITE_API_URL at build/runtime; docker sets it automatically.
-# For local dev, create .env.local with:
-#   VITE_API_URL=http://localhost:5000/api/v1
 npm run dev
-# Open http://localhost:5173
 ```
 
-### Troubleshooting
+### Building for Production
 
-- **Backend can’t connect to DB (password auth failed)**: Ensure `.env` `POSTGRES_PASSWORD` matches; if you changed it, run `docker compose down -v` then `docker compose up -d --build`.
-- **Port already in use (5000 or 5173)**: Stop conflicting apps or edit `docker-compose.yml` port mappings.
-- **Tesseract not found (non-Docker run)**: Install Tesseract and ensure it’s on PATH.
-- **CORS issues (non-Docker run)**: Set `CORS_ORIGIN` to your frontend origin (e.g., `http://localhost:5173`).
+**Frontend**
 
-- The easiest path for your friend is Docker: create `.env` with `POSTGRES_PASSWORD=app`, run `docker compose up -d --build`, then visit http://localhost:5173.
+```bash
+cd frontend
+npm run build
+```
 
-University Verifier
+**Backend**
 
-A Docker-first React + Flask + PostgreSQL application with OCR and optional AI extraction.
-run this-
-docker compose up -d
-docker compose ps --all
-You can now access:
-• Frontend: http://localhost:5173
-• Backend: http://localhost:5000/health
-• API base: http://localhost:5000/api/v1
+```bash
+cd backend
+pip install -r requirements.txt
+python -m app.main
+```
 
-Quick start
-• Copy .env.example to .env and set POSTGRES_PASSWORD (no quotes).
-• Build and run:
-• docker compose --env-file .
-Stopped task 4/5: "Export secure POSTGRES_PASSWORD for this session"
-~\university-verifier
-give me the README.md with how to run the project
-University Verifier
+## 📝 Contributing
 
-A Docker-first web app for verifying university certificates:
-• Frontend: React + TypeScript + Vite + Material-UI + Axios
-• Backend: Python + Flask + SQLAlchemy
-• Database: PostgreSQL
-• OCR: Tesseract (via pytesseract), swap to EasyOCR later if desired
-• Containerized with Docker and Docker Compose
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Commit changes: `git commit -am 'Add feature'`
+4. Push to branch: `git push origin feature-name`
+5. Submit a pull request
 
-Features
+## 📄 License
 
-• Upload certificate images
-• OCR text extraction
-• Naive field extraction (name, registration number, degree, etc.)
-• Browse records and view details with the original image
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Project structure
+## 🤝 Support
 
-• backend/
-• app/
-◦ api/routes.py
-◦ core/config.py
-◦ db/{models.py, session.py}
-◦ services/{ocr.py, images.py, extract.py}
-◦ main.py
-• requirements.txt
-• frontend/
-• src/{pages, api, assets, App.tsx, main.tsx}
-• package.json, vite config, tsconfigs
-• docker/
-• backend.Dockerfile
-• frontend.Dockerfile
-• docker-compose.yml
-• .env.example (copy to .env)
-• .gitignore
+For support and questions:
 
-Prerequisites
+- Create an issue in the repository
+- Check the troubleshooting section above
+- Ensure all prerequisites are installed correctly
 
-• Docker Desktop (Windows/macOS) or Docker Engine
-• PowerShell on Windows (commands below use pwsh syntax)
+## 🔧 Development Configuration
 
-Quick start (Docker-first)
+### ESLint Configuration
 
-1. Copy and configure environment
-   • PowerShell, in the project root:
-   • Copy-Item .env.example .env
-   • Open .env and set POSTGRES_PASSWORD to a real value (no quotes).
-   • Optional: set OPENAI_API_KEY if you plan to integrate AI extraction later.
+The project uses ESLint for code quality. To expand the ESLint configuration for production applications, you can enable type-aware lint rules:
 
-2. Build and start services
-   • docker compose --env-file .env up --build -d
+```js
+export default tseslint.config([
+  globalIgnores(["dist"]),
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      // Other configs...
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+]);
+```
 
-3. Verify services
-   • Backend health:
-   • Invoke-WebRequest -UseBasicParsing http://localhost:5000/health | Select-Object -ExpandProperty Content
-   • Expected: {"status":"ok"}
-   • Frontend:
-   • Open http://localhost:5173 in your browser
+### React-Specific Linting
 
-4. Use the app
-   • Upload a certificate image on the frontend (or via API below)
-   • View records and details pages
+For enhanced React development, you can install additional ESLint plugins:
 
-5. Stop services
-   • Keep volumes/data:
-   • docker compose down
-   • Remove volumes/data (reset DB):
-   • docker compose down -v
+```bash
+npm install --save-dev eslint-plugin-react-x eslint-plugin-react-dom
+```
 
-Environment variables
+Then update your `eslint.config.js`:
 
-• POSTGRES_PASSWORD (required): password for DB user app
-• OPENAI_API_KEY (optional): for future AI-based extraction
-• The compose file supplies:
-• DB_URL to backend
-• UPLOAD_DIR to backend (/data/uploads)
-• VITE_API_URL to frontend (http://localhost:5000/api/v1)
+```js
+import reactX from "eslint-plugin-react-x";
+import reactDom from "eslint-plugin-react-dom";
 
-API
+export default tseslint.config([
+  globalIgnores(["dist"]),
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [
+      // Enable lint rules for React
+      reactX.configs["recommended-typescript"],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+]);
+```
 
-Base URL: http://localhost:5000/api/v1
+### Vite Configuration
 
-• POST /certificates/upload
-• multipart/form-data, field name: file (image/\*)
-• GET /certificates
-• GET /certificates/{id}
-• GET /certificates/{id}/image
+The project uses Vite for fast development and building. Key features:
 
-Example upload (PowerShell):
-• $form = @{ file = Get-Item 'C:\path\to\certificate.jpg' }
-• Invoke-WebRequest -UseBasicParsing -Method Post -Uri http://localhost:5000/api/v1/certificates/upload -Form $form
+- **Hot Module Replacement (HMR)** for instant updates during development
+- **Fast Refresh** for React components
+- **Optimized builds** for production
 
-Local development (optional, without Docker)
+Available Vite plugins:
 
-Backend
-• py -3 -m venv .venv
-• ..venv\Scripts\Activate.ps1
-• pip install -r backend\requirements.txt
-• Ensure Postgres is running (you can still use docker compose up db)
-• Set environment variables:
-• $env:DB_URL = "postgresql+psycopg2://app:YOUR_PASSWORD@localhost:5432/university"
-•  $env:CORS_ORIGIN = "http://localhost:5173"
-•  $env:UPLOAD_DIR = "$PWD\data\uploads"
-• Run:
-• Push-Location backend
-• python -m app.main
-• Pop-Location
-• Health: http://localhost:5000/health
+- `@vitejs/plugin-react` - Uses Babel for Fast Refresh
+- `@vitejs/plugin-react-swc` - Uses SWC for even faster refresh (alternative)
 
-Frontend
-• Push-Location frontend
-• npm ci
-• npm run dev (or npm run preview after npm run build)
-• Pop-Location
-• App: http://localhost:5173
+## 🔮 Future Enhancements
 
-Troubleshooting
+- [ ] Docker containerization
+- [ ] Database integration for storing processed documents
+- [ ] Batch processing capabilities
+- [ ] Enhanced PDF processing
+- [ ] Multiple OCR engine support (EasyOCR)
+- [ ] User authentication and document management
+- [ ] Advanced AI models integration
+- [ ] Document classification and categorization
+- [ ] TypeScript migration for better type safety
+- [ ] Enhanced ESLint configuration with React-specific rules
+- [ ] Unit and integration testing setup
+- [ ] CI/CD pipeline configuration
 
-• Backend container exits with “password authentication failed for user 'app'”
-• Ensure POSTGRES_PASSWORD is set in .env and matches the compose environment
-• Recreate stack with a clean DB:
-◦ docker compose down -v
-◦ docker compose --env-file .env up --build -d
-• Tesseract/OCR issues
-• The backend image installs tesseract-ocr. If OCR quality is poor, consider preprocessing (backend/app/services/images.py) or switching to EasyOCR (edit backend/app/services/ocr.py).
-• CORS or API URL issues
-• Frontend uses VITE_API_URL from compose. If running components separately, ensure VITE_API_URL points to http://localhost:5000/api/v1.
+## 📚 Additional Resources
 
-Security
+### React + Vite Template Information
 
-• Do not commit .env. The repository includes .env.example for reference.
-• Use strong POSTGRES_PASSWORD values.
+This project is built on the React + Vite template, which provides:
 
-License
+- Minimal setup for React development
+- ESLint rules for code quality
+- Hot Module Replacement (HMR)
+- Fast build times with Vite
 
-MIT (or your preferred license).
+### Development Tools
+
+- **ESLint**: Code linting and formatting
+- **Vite**: Build tool and development server
+- **Material-UI**: Component library
+- **Axios**: HTTP client
+- **React Router**: Client-side routing
+
+---
+
+**Note**: This application is designed for educational and development purposes. Ensure you have proper permissions before processing sensitive documents.
