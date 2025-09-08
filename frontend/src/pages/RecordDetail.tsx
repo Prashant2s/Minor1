@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import api from '../api/axios'
+import api from '../api/axios.js'
 
-function formatValue(key: string, value: any) {
+function formatValue(key, value) {
   const s = String(value ?? '')
   if (key === 'student_name') {
     const m = s.match(/^(.*?)(Enrollment\s*No\s*:\s*.+)$/i)
@@ -17,7 +17,7 @@ function formatValue(key: string, value: any) {
 
 const IMPORTANT_KEYS = [
   'student_name',
-  'registration_no',
+  'registration_number',
   'degree',
   'date_of_birth',
   'year',
@@ -26,9 +26,9 @@ const IMPORTANT_KEYS = [
 
 export default function RecordDetail() {
   const { id } = useParams()
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
   const [showRaw, setShowRaw] = useState(false)
 
   const imageUrl = useMemo(() => {
@@ -41,7 +41,7 @@ export default function RecordDetail() {
       try {
         const res = await api.get(`/certificates/${id}`)
         setData(res.data)
-      } catch (err: any) {
+      } catch (err) {
         setError(err?.response?.data?.error || 'Failed to load record')
       } finally {
         setLoading(false)
@@ -53,11 +53,8 @@ export default function RecordDetail() {
   if (error) return <p style={{ padding: 16, color: 'red' }}>{error}</p>
   if (!data) return <p style={{ padding: 16 }}>No data.</p>
 
-  // Map fields from array into a dict for quick lookup
-  const fieldMap: Record<string, any> = {}
-  for (const f of data.fields || []) {
-    if (typeof f?.key === 'string') fieldMap[f.key] = f.value
-  }
+  // Backend returns an object: extracted_fields { key: { value, confidence } }
+  const fieldMap = data.extracted_fields || {}
   const hasImportant = IMPORTANT_KEYS.some((k) => fieldMap[k])
 
   return (
@@ -86,16 +83,16 @@ export default function RecordDetail() {
             <p>No structured fields found.</p>
           )}
 
-          {data.fields?.length ? (
+          {Object.keys(fieldMap).length ? (
             <div style={{ marginTop: 16 }}>
               <button onClick={() => setShowRaw((s) => !s)} style={{ padding: '6px 10px' }}>
                 {showRaw ? 'Hide raw' : 'Show raw'}
               </button>
               {showRaw && (
                 <ul>
-                  {data.fields.map((f: any, idx: number) => (
-                    <li key={idx}>
-                      <strong>{f.key}:</strong> {f.value}
+                  {Object.entries(fieldMap).map(([k, v]) => (
+                    <li key={k}>
+                      <strong>{k}:</strong> {typeof v === 'object' && v !== null ? v.value : String(v)}
                     </li>
                   ))}
                 </ul>
