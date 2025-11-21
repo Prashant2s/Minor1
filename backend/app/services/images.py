@@ -1,38 +1,50 @@
 from pathlib import Path
 from PIL import Image
+import logging
 
-def save_and_process_file(stream, dest: Path):
-    """Save uploaded file and return processed path and file type."""
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf', 'tiff', 'bmp', 'webp'}
+
+def is_allowed_file(filename: str) -> bool:
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_and_process_file(stream, dest: Path) -> tuple[Path, str]:
+    """
+    Save and process uploaded file for AI processing.
+    Simplified version for AI-focused certificate verifier.
+    """
     dest.parent.mkdir(parents=True, exist_ok=True)
     
-    # Save the file
     with open(dest, 'wb') as f:
         f.write(stream.read())
     
-    # Determine file type and process if needed
-    file_extension = dest.suffix.lower()
+    file_ext = dest.suffix.lower()
     
-    if file_extension in ['.jpg', '.jpeg', '.png', '.tiff', '.tif']:
-        # It's an image file
-        try:
+    try:
+        if file_ext == '.pdf':
+            # For this AI project, we'll treat PDFs as valid but process them as generic files
+            logger.info(f"PDF file saved: {dest}")
+            return dest, 'pdf'
+        else:
+            # Validate image files using Pillow
             img = Image.open(dest)
-            img.verify()  # Verify it's a valid image
+            img.verify()
+            
+            # Re-open after verify (verify closes the image)
+            img = Image.open(dest)
+            
+            # Convert to RGB if necessary for consistency
+            if img.mode not in ['RGB', 'L']:
+                img = img.convert('RGB')
+                # Save the converted image
+                img.save(dest, 'PNG', optimize=True)
+                logger.info(f"Image converted to RGB: {dest}")
+            
             return dest, 'image'
-        except Exception:
-            dest.unlink(missing_ok=True)
-            raise ValueError("Invalid image file")
-    
-    elif file_extension == '.pdf':
-        # For PDF, we'll need to convert to image first
-        # For now, return as PDF type - you might want to add PDF processing
-        return dest, 'pdf'
-    
-    else:
+            
+    except Exception as e:
         dest.unlink(missing_ok=True)
-        raise ValueError(f"Unsupported file type: {file_extension}")
-
-def is_allowed_file(filename: str) -> bool:
-    """Check if file type is allowed."""
-    allowed_extensions = {'.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.tif'}
-    return Path(filename).suffix.lower() in allowed_extensions
-
+        raise ValueError(f"Invalid file format or corrupted file: {str(e)}")
