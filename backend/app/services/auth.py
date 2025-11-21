@@ -8,7 +8,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # JWT Secret Key (in production, use a secure secret)
-JWT_SECRET = "your-secret-key-change-in-production"
+JWT_SECRET = "yabcd"
 JWT_ALGORITHM = "HS256"
 
 def generate_token(user_id: int, user_type: str, username: str) -> str:
